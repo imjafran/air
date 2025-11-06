@@ -730,10 +730,12 @@
             air = new Air(room, { name: userName });
 
             air.onConnect((info) => {
+                console.log('Connected!', info);
                 updateStatus(true);
                 addSystemMessage(`Welcome to AirStory Demo! You're now connected to room "${room}"`);
             })
             .onMessage((msg) => {
+                console.log('Message received:', msg);
                 addMessage(msg.sender, msg.data);
             })
             .onJoin((user) => {
@@ -942,6 +944,8 @@
             e.preventDefault();
             const text = messageInput.value.trim();
 
+            console.log('Form submitted! Text:', text, 'Connected:', air && air.isConnected());
+
             if ((text || currentAttachment) && air && air.isConnected()) {
                 const data = { text };
 
@@ -957,10 +961,14 @@
                     }
                 }
 
+                console.log('Sending data:', data);
                 air.send(data);
+                console.log('Message sent!');
                 messageInput.value = '';
                 clearAttachment();
                 messageInput.focus();
+            } else {
+                console.log('Not sending - text/attachment missing or not connected');
             }
         });
     </script>
