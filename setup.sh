@@ -58,15 +58,39 @@ fi
 echo "Installing MySQL..."
 if ! command -v mysql &> /dev/null; then
     export DEBIAN_FRONTEND=noninteractive
+
+    # Clean up any previous failed installations
+    sudo apt remove --purge mysql-server mysql-server-* -y 2>/dev/null || true
+    sudo apt autoremove -y
+    sudo apt autoclean
+    sudo rm -rf /var/lib/mysql /etc/mysql
+
+    # Install fresh
     sudo apt install -y mysql-server
+
+    # Start MySQL
     sudo systemctl start mysql
+
+    # Wait for MySQL to be ready
+    for i in {1..30}; do
+        if sudo mysqladmin ping -h localhost --silent; then
+            echo "MySQL is ready"
+            break
+        fi
+        echo "Waiting for MySQL to start... ($i/30)"
+        sleep 1
+    done
+
     sudo systemctl enable mysql
 
     # Set root password after installation
     sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';"
     sudo mysql -e "FLUSH PRIVILEGES;"
+
+    echo -e "${GREEN}✓ MySQL installed and configured${NC}"
 else
     echo "MySQL already installed"
+    sudo systemctl start mysql 2>/dev/null || true
 fi
 
 # Install Nginx
@@ -87,6 +111,18 @@ fi
 
 echo -e "${GREEN}✓ Dependencies installed${NC}"
 echo ""
+
+# Verify MySQL is running
+if ! sudo systemctl is-active --quiet mysql; then
+    echo -e "${RED}Error: MySQL service is not running${NC}"
+    echo "Attempting to fix..."
+    sudo systemctl start mysql
+    sleep 3
+    if ! sudo systemctl is-active --quiet mysql; then
+        echo -e "${RED}Failed to start MySQL. Check logs with: sudo journalctl -u mysql -n 50${NC}"
+        exit 1
+    fi
+fi
 
 # Set up database
 echo -e "${YELLOW}Setting up database...${NC}"
