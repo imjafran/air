@@ -746,11 +746,19 @@
                 addSystemMessage(`${user.name} left the chat`);
             })
             .onUserList((users) => {
-                console.log('User list received:', users);
-                updateUserList(users);
+                console.log('✓ onUserList event triggered');
+                console.log('  Users array:', users);
+                console.log('  Users length:', users ? users.length : 'undefined');
+                if (users) {
+                    updateUserList(users);
+                } else {
+                    console.error('Users is undefined!');
+                }
             })
             .onTyping((users) => {
-                console.log('Typing event received, users:', users);
+                console.log('✓ onTyping event triggered');
+                console.log('  Typing users:', users);
+                console.log('  Type:', typeof users, 'Length:', users ? users.length : 'N/A');
                 updateTypingIndicator(users);
             })
             .onError(() => {
@@ -779,13 +787,23 @@
         }
 
         function updateUserList(users) {
-            console.log('Updating user list with:', users, 'Length:', users.length);
+            if (!users) {
+                console.error('❌ updateUserList: users is null/undefined!');
+                return;
+            }
+            console.log('📋 Updating user list');
+            console.log('   Array:', users);
+            console.log('   Length:', users.length);
+            console.log('   First user:', users[0]);
 
             const count = users.length;
-            userCount.textContent = `${count} user${count !== 1 ? 's' : ''} online`;
+            const countText = `${count} user${count !== 1 ? 's' : ''} online`;
+            userCount.textContent = countText;
+            console.log('   Set count text to:', countText);
 
             userList.innerHTML = '';
-            users.forEach(user => {
+            users.forEach((user, idx) => {
+                console.log(`   [${idx}] Creating tag for:`, user.name);
                 const tag = document.createElement('div');
                 tag.className = 'user-tag';
                 tag.textContent = user.name;
@@ -804,16 +822,26 @@
         }
 
         function updateTypingIndicator(users) {
-            console.log('Updating typing indicator with users:', users);
-            if (users.length === 0) {
-                typingIndicator.textContent = '';
-            } else if (users.length === 1) {
-                typingIndicator.textContent = `${users[0]} is typing...`;
-            } else if (users.length === 2) {
-                typingIndicator.textContent = `${users[0]} and ${users[1]} are typing...`;
-            } else {
-                typingIndicator.textContent = `${users[0]}, ${users[1]} and ${users.length - 2} others are typing...`;
+            if (!users) {
+                console.error('❌ updateTypingIndicator: users is null/undefined!');
+                return;
             }
+            console.log('⌨️  Updating typing indicator');
+            console.log('   Users:', users);
+            console.log('   Count:', users.length);
+
+            let text = '';
+            if (users.length === 0) {
+                text = '';
+            } else if (users.length === 1) {
+                text = `${users[0]} is typing...`;
+            } else if (users.length === 2) {
+                text = `${users[0]} and ${users[1]} are typing...`;
+            } else {
+                text = `${users[0]}, ${users[1]} and ${users.length - 2} others are typing...`;
+            }
+            typingIndicator.textContent = text;
+            console.log('   Set text to:', text);
         }
 
         function formatTime() {
