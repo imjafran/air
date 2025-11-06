@@ -18,7 +18,8 @@ DOMAIN="air.arraystory.com"
 # 1. Check DNS
 echo -e "${YELLOW}[1/7] Checking DNS...${NC}"
 DNS_IP=$(dig +short ${DOMAIN} A | tail -n1)
-SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "Unable to get IP")
+# Get IPv4 address specifically
+SERVER_IP=$(curl -4 -s ifconfig.me 2>/dev/null || curl -s ifconfig.me 2>/dev/null || echo "Unable to get IP")
 
 echo "Domain: ${DOMAIN}"
 echo "Resolves to: ${DNS_IP}"

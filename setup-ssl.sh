@@ -36,7 +36,8 @@ fi
 # Check DNS
 echo "Checking DNS..."
 DNS_IP=$(dig +short ${DOMAIN} A | tail -n1)
-SERVER_IP=$(curl -s ifconfig.me)
+# Get IPv4 address specifically
+SERVER_IP=$(curl -4 -s ifconfig.me 2>/dev/null || curl -s ifconfig.me)
 
 echo "Domain ${DOMAIN} resolves to: ${DNS_IP}"
 echo "This server IP: ${SERVER_IP}"
