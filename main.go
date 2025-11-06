@@ -20,6 +20,8 @@ import (
 type Client struct {
 	conn    net.Conn
 	channel string
+	id      string
+	name    string
 }
 
 type Hub struct {
@@ -30,9 +32,25 @@ type Hub struct {
 }
 
 type broadcastMessage struct {
-	channel string
-	data    []byte
-	sender  *Client // Track who sent the message
+	channel  string
+	data     []byte
+	sender   *Client // Track who sent the message
+	target   *Client // Target client for direct messages
+	msgType  string  // "broadcast", "direct", "typing", "userlist"
+}
+
+type UserInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type MessagePayload struct {
+	Type   string `json:"type"`           // "message", "direct", "typing", "join", "leave"
+	Data   any    `json:"data,omitempty"`
+	To     string `json:"to,omitempty"`     // Target user ID for direct messages
+	From   string `json:"from,omitempty"`   // Sender user ID
+	Sender string `json:"sender,omitempty"` // Sender name
+	Users  []UserInfo `json:"users,omitempty"` // User list
 }
 
 type Room struct {
@@ -157,18 +175,125 @@ func (h *Hub) validateOrigin(roomID int64, origin string) (bool, error) {
 	return count > 0, nil
 }
 
+func (h *Hub) getUserList(channel string) []UserInfo {
+	users := []UserInfo{}
+	h.mu.RLock()
+	for client := range h.clients {
+		if client.channel == channel {
+			users = append(users, UserInfo{
+				ID:   client.id,
+				Name: client.name,
+			})
+		}
+	}
+	h.mu.RUnlock()
+	return users
+}
+
+func (h *Hub) broadcastUserList(channel string) {
+	users := h.getUserList(channel)
+	payload := MessagePayload{
+		Type:  "userlist",
+		Users: users,
+	}
+	data, _ := json.Marshal(payload)
+
+	h.mu.RLock()
+	for client := range h.clients {
+		if client.channel == channel {
+			wsutil.WriteServerMessage(client.conn, ws.OpText, data)
+		}
+	}
+	h.mu.RUnlock()
+}
+
 func (h *Hub) run() {
 	for {
 		msg := <-h.broadcast
 		h.mu.RLock()
-		for client := range h.clients {
-			// Only send to clients in the same channel, but not to the sender
-			if client.channel == msg.channel && client != msg.sender {
-				wsutil.WriteServerMessage(client.conn, ws.OpText, msg.data)
+
+		switch msg.msgType {
+		case "direct":
+			// Send to specific target only
+			if msg.target != nil {
+				wsutil.WriteServerMessage(msg.target.conn, ws.OpText, msg.data)
+			}
+
+		case "typing":
+			// Broadcast typing indicator to all except sender
+			for client := range h.clients {
+				if client.channel == msg.channel && client != msg.sender {
+					wsutil.WriteServerMessage(client.conn, ws.OpText, msg.data)
+				}
+			}
+
+		case "userlist":
+			// Broadcast user list to all in channel
+			for client := range h.clients {
+				if client.channel == msg.channel {
+					wsutil.WriteServerMessage(client.conn, ws.OpText, msg.data)
+				}
+			}
+
+		default: // "broadcast"
+			// Send to all clients in the same channel, except sender
+			for client := range h.clients {
+				if client.channel == msg.channel && client != msg.sender {
+					wsutil.WriteServerMessage(client.conn, ws.OpText, msg.data)
+				}
 			}
 		}
+
 		h.mu.RUnlock()
 	}
+}
+
+func (h *Hub) findClientByID(channel, userID string) *Client {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for client := range h.clients {
+		if client.channel == channel && client.id == userID {
+			return client
+		}
+	}
+	return nil
+}
+
+func (h *Hub) handleAirJS(w http.ResponseWriter, r *http.Request) {
+	// Get origin or referer to validate
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		origin = r.Header.Get("Referer")
+	}
+
+	// Extract hostname
+	hostname := origin
+	if idx := strings.Index(hostname, "://"); idx != -1 {
+		hostname = hostname[idx+3:]
+	}
+	if idx := strings.Index(hostname, "/"); idx != -1 {
+		hostname = hostname[:idx]
+	}
+	if idx := strings.Index(hostname, ":"); idx != -1 {
+		hostname = hostname[:idx]
+	}
+
+	// Check if domain is in any room's whitelist
+	var count int
+	query := `SELECT COUNT(*) FROM air_room_domains WHERE domain = ?`
+	err := h.db.QueryRow(query, hostname).Scan(&count)
+
+	if err != nil || count == 0 {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Serve the air.js file
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+
+	http.ServeFile(w, r, "./public/air.prod.js")
 }
 
 func (h *Hub) handleEmit(w http.ResponseWriter, r *http.Request) {
@@ -230,6 +355,7 @@ func (h *Hub) handleEmit(w http.ResponseWriter, r *http.Request) {
 		channel: apiToken.RoomName,
 		data:    dataBytes,
 		sender:  nil,
+		msgType: "broadcast",
 	}
 
 	// Return success response
@@ -245,6 +371,14 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	channel := r.URL.Query().Get("channel")
 	if channel == "" {
 		http.Error(w, "channel query parameter required", http.StatusBadRequest)
+		return
+	}
+
+	// Get user info from query parameters
+	userID := r.URL.Query().Get("id")
+	userName := r.URL.Query().Get("name")
+	if userID == "" || userName == "" {
+		http.Error(w, "id and name query parameters required", http.StatusBadRequest)
 		return
 	}
 
@@ -274,10 +408,12 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Create client with channel
+	// Create client with channel, id and name
 	client := &Client{
 		conn:    conn,
 		channel: channel,
+		id:      userID,
+		name:    userName,
 	}
 
 	// Register client
@@ -285,11 +421,45 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	h.clients[client] = true
 	h.mu.Unlock()
 
+	// Broadcast user joined
+	joinPayload := MessagePayload{
+		Type:   "join",
+		From:   userID,
+		Sender: userName,
+	}
+	joinData, _ := json.Marshal(joinPayload)
+	h.broadcast <- broadcastMessage{
+		channel: channel,
+		data:    joinData,
+		sender:  client,
+		msgType: "broadcast",
+	}
+
+	// Broadcast updated user list
+	h.broadcastUserList(channel)
+
 	// Cleanup on disconnect
 	defer func() {
 		h.mu.Lock()
 		delete(h.clients, client)
 		h.mu.Unlock()
+
+		// Broadcast user left
+		leavePayload := MessagePayload{
+			Type:   "leave",
+			From:   userID,
+			Sender: userName,
+		}
+		leaveData, _ := json.Marshal(leavePayload)
+		h.broadcast <- broadcastMessage{
+			channel: channel,
+			data:    leaveData,
+			sender:  nil,
+			msgType: "broadcast",
+		}
+
+		// Broadcast updated user list
+		h.broadcastUserList(channel)
 	}()
 
 	// Read messages
@@ -302,7 +472,7 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		// Handle different operation codes
 		switch op {
 		case ws.OpText:
-			// Parse message as JSON: {channel: "...", data: ...}
+			// Parse message as JSON
 			var payload map[string]any
 			err := json.Unmarshal(msg, &payload)
 			if err != nil {
@@ -310,9 +480,9 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			msgChannel, channelOk := payload["channel"].(string)
-			msgData, dataOk := payload["data"]
+			msgType, typeOk := payload["type"].(string)
 
-			if !channelOk || !dataOk {
+			if !channelOk {
 				continue
 			}
 
@@ -321,25 +491,99 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// Convert data to JSON
-			dataBytes, err := json.Marshal(msgData)
-			if err != nil {
-				continue
+			// Default type is "message"
+			if !typeOk {
+				msgType = "message"
 			}
 
-			// Check message size against room's max buffer size
-			messageSize := int64(len(dataBytes))
-			if messageSize > room.MaxBufferSize {
-				// Send error message back to client
-				errMsg := fmt.Sprintf(`{"error":"Message size %d bytes exceeds room limit of %d bytes"}`, messageSize, room.MaxBufferSize)
-				wsutil.WriteServerMessage(conn, ws.OpText, []byte(errMsg))
-				continue
-			}
+			switch msgType {
+			case "typing":
+				// Broadcast typing indicator
+				typingPayload := MessagePayload{
+					Type:   "typing",
+					From:   userID,
+					Sender: userName,
+				}
+				typingData, _ := json.Marshal(typingPayload)
+				h.broadcast <- broadcastMessage{
+					channel: channel,
+					data:    typingData,
+					sender:  client,
+					msgType: "typing",
+				}
 
-			h.broadcast <- broadcastMessage{
-				channel: msgChannel,
-				data:    dataBytes,
-				sender:  client,
+			case "direct":
+				// Send direct message to specific user
+				targetID, targetOk := payload["to"].(string)
+				msgData, dataOk := payload["data"]
+
+				if !targetOk || !dataOk {
+					continue
+				}
+
+				// Find target client
+				targetClient := h.findClientByID(channel, targetID)
+				if targetClient == nil {
+					continue
+				}
+
+				// Prepare direct message
+				directPayload := MessagePayload{
+					Type:   "direct",
+					From:   userID,
+					Sender: userName,
+					Data:   msgData,
+				}
+				directData, _ := json.Marshal(directPayload)
+
+				// Check message size
+				messageSize := int64(len(directData))
+				if messageSize > room.MaxBufferSize {
+					errMsg := fmt.Sprintf(`{"error":"Message size %d bytes exceeds room limit of %d bytes"}`, messageSize, room.MaxBufferSize)
+					wsutil.WriteServerMessage(conn, ws.OpText, []byte(errMsg))
+					continue
+				}
+
+				h.broadcast <- broadcastMessage{
+					channel: channel,
+					data:    directData,
+					sender:  client,
+					target:  targetClient,
+					msgType: "direct",
+				}
+
+			default: // "message" or any other type - broadcast to all
+				msgData, dataOk := payload["data"]
+				if !dataOk {
+					continue
+				}
+
+				// Prepare broadcast message
+				broadcastPayload := MessagePayload{
+					Type:   "message",
+					From:   userID,
+					Sender: userName,
+					Data:   msgData,
+				}
+				broadcastData, err := json.Marshal(broadcastPayload)
+				if err != nil {
+					continue
+				}
+
+				// Check message size
+				messageSize := int64(len(broadcastData))
+				if messageSize > room.MaxBufferSize {
+					errMsg := fmt.Sprintf(`{"error":"Message size %d bytes exceeds room limit of %d bytes"}`, messageSize, room.MaxBufferSize)
+					wsutil.WriteServerMessage(conn, ws.OpText, []byte(errMsg))
+					continue
+				}
+
+				h.broadcast <- broadcastMessage{
+					channel: channel,
+					data:    broadcastData,
+					sender:  client,
+					msgType: "broadcast",
+				}
 			}
 
 		case ws.OpPing:
@@ -396,6 +640,9 @@ func main() {
 
 	// HTTP API endpoint to emit messages
 	http.HandleFunc("/emit", hub.handleEmit)
+
+	// Client library with CORS protection
+	http.HandleFunc("/air.js", hub.handleAirJS)
 
 	// Serve static files
 	http.Handle("/", http.FileServer(http.Dir("./public")))

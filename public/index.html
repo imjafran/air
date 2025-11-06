@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Chat - Public Demo</title>
+    <title>AirSocket Demo - Real-time Anonymous Chat</title>
     <style>
         * {
             margin: 0;
@@ -18,6 +18,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 10px;
         }
 
         .name-screen {
@@ -30,23 +31,50 @@
 
         .name-container {
             background: white;
-            border-radius: 10px;
+            border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             padding: 40px;
             text-align: center;
-            max-width: 400px;
-            width: 90%;
+            max-width: 450px;
+            width: 100%;
         }
 
         .name-container h1 {
-            font-size: 2rem;
-            color: #2d3748;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
         }
 
-        .name-container p {
+        .name-container .subtitle {
             color: #718096;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .name-container .disclaimer {
+            color: #a0aec0;
+            font-size: 0.875rem;
             margin-bottom: 30px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .name-container .info {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .name-container .info strong {
+            color: #2d3748;
         }
 
         .name-container form {
@@ -58,7 +86,7 @@
         .name-container input {
             padding: 15px;
             border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1rem;
             outline: none;
             transition: border-color 0.2s;
@@ -70,82 +98,94 @@
 
         .name-container button {
             padding: 15px;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .name-container button:hover {
-            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .name-container .footer-link {
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .name-container .footer-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .name-container .footer-link a:hover {
+            text-decoration: underline;
         }
 
         .container {
             background: white;
-            border-radius: 10px;
+            border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 600px;
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 700px;
             overflow: hidden;
             display: none;
+            flex-direction: column;
         }
 
         .header {
-            background: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
         }
 
-        .header-left h1 {
+        .header h1 {
             font-size: 1.5rem;
-            margin-bottom: 4px;
-        }
-
-        .header-left small {
-            color: #cbd5e0;
-            font-size: 0.875rem;
         }
 
         .status {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
         }
 
         .status::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
         }
 
-        .status.connected {
-            background: #48bb78;
-        }
-
         .status.connected::before {
-            background: white;
+            background: #48bb78;
             animation: pulse 2s infinite;
         }
 
-        .status.disconnected {
-            background: #f56565;
-        }
-
         .status.disconnected::before {
-            background: white;
+            background: #f56565;
         }
 
         @keyframes pulse {
@@ -153,8 +193,13 @@
             50% { opacity: 0.5; }
         }
 
+        .header-info {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
         .messages {
-            height: 500px;
+            flex: 1;
             overflow-y: auto;
             padding: 20px;
             background: #f7fafc;
@@ -176,10 +221,6 @@
             }
         }
 
-        .message.sent {
-            text-align: right;
-        }
-
         .message.received {
             text-align: left;
         }
@@ -191,26 +232,37 @@
             margin-bottom: 4px;
         }
 
-        .message.sent .message-sender {
-            color: #5a67d8;
-        }
-
         .message-content {
             display: inline-block;
             padding: 10px 15px;
             border-radius: 18px;
-            max-width: 70%;
+            max-width: 80%;
             word-wrap: break-word;
-        }
-
-        .message.sent .message-content {
-            background: #667eea;
-            color: white;
-        }
-
-        .message.received .message-content {
             background: #e2e8f0;
             color: #2d3748;
+        }
+
+        .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+
+        .message-content .file-attachment {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 8px;
+            margin-top: 5px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .message-content .file-attachment:hover {
+            background: rgba(0,0,0,0.1);
         }
 
         .message.system {
@@ -229,27 +281,52 @@
             display: none;
         }
 
-        .message.system .message-time {
-            color: #a0aec0;
-            font-size: 0.7rem;
-            margin-top: 4px;
-        }
-
         .message-time {
             font-size: 0.7rem;
             color: #a0aec0;
             margin-top: 4px;
         }
 
+        .typing-indicator {
+            font-size: 0.875rem;
+            color: #718096;
+            font-style: italic;
+            padding: 10px 20px;
+            min-height: 20px;
+        }
+
         .input-area {
-            padding: 20px;
+            padding: 15px 20px;
             background: white;
             border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .input-controls button {
+            padding: 8px 12px;
+            background: #edf2f7;
+            color: #4a5568;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .input-controls button:hover {
+            background: #e2e8f0;
         }
 
         .input-form {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         .input-form input {
@@ -268,62 +345,189 @@
 
         .input-form button {
             padding: 12px 24px;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 25px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.2s;
         }
 
-        .input-form button:hover {
-            background: #5a67d8;
+        .input-form button:hover:not(:disabled) {
+            transform: scale(1.05);
         }
 
         .input-form button:disabled {
-            background: #cbd5e0;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .connection-info {
-            padding: 10px 20px;
-            background: #edf2f7;
+        .footer {
+            padding: 12px 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .footer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .user-count {
             font-size: 0.875rem;
             color: #4a5568;
+            font-weight: 600;
+        }
+
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .user-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #4a5568;
+        }
+
+        .user-tag::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .footer-link {
             text-align: center;
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .footer-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .attachment-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .attachment-preview button {
+            padding: 4px 8px;
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-height: 100vh;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .name-container {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="name-screen" id="nameScreen">
         <div class="name-container">
-            <h1>Air Chat</h1>
-            <p>Join the public demo chat</p>
+            <h1>AirSocket</h1>
+            <p class="subtitle">Anonymous Real-time Chat Demo</p>
+            <div class="disclaimer">
+                <strong>Demo Showcase:</strong> This is a dummy anonymous chat built as a showcase of <strong>AirSocket by ArrayStory</strong>. The library is <strong>less than 1KB</strong> and you can easily integrate it into your application within minutes!
+            </div>
+            <div class="info">
+                Share images (up to 2MB), files (up to 2MB), and see real-time typing indicators!
+            </div>
             <form id="nameForm">
                 <input type="text" id="nameInput" placeholder="Enter your name..." autocomplete="off" maxlength="20" required>
                 <button type="submit">Join Chat</button>
             </form>
+            <div class="footer-link">
+                Learn more at <a href="https://arraystory.com/air" target="_blank">arraystory.com/air</a>
+            </div>
         </div>
     </div>
 
     <div class="container" id="chatContainer">
         <div class="header">
-            <div class="header-left">
-                <h1>Air Chat</h1>
-                <small id="userLabel"></small>
+            <div class="header-top">
+                <h1>AirSocket Demo</h1>
+                <div class="status disconnected" id="status">Disconnected</div>
             </div>
-            <div class="status disconnected" id="status">Disconnected</div>
+            <div class="header-info" id="userLabel"></div>
         </div>
         <div class="messages" id="messages"></div>
+        <div class="typing-indicator" id="typingIndicator"></div>
         <div class="input-area">
+            <div id="attachmentPreview"></div>
+            <div class="input-controls">
+                <button onclick="document.getElementById('imageInput').click()">📷 Image</button>
+                <button onclick="document.getElementById('fileInput').click()">📎 File</button>
+            </div>
             <form class="input-form" id="messageForm">
                 <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" disabled>
                 <button type="submit" id="sendBtn" disabled>Send</button>
             </form>
+            <input type="file" id="imageInput" accept="image/*">
+            <input type="file" id="fileInput">
         </div>
-        <div class="connection-info" id="connectionInfo">Connecting...</div>
+        <div class="footer">
+            <div class="footer-top">
+                <div class="user-count" id="userCount">0 users online</div>
+            </div>
+            <div class="user-list" id="userList"></div>
+            <div class="footer-link">
+                Powered by <strong>AirSocket</strong> (&lt;1KB) | <a href="https://arraystory.com/air" target="_blank">arraystory.com/air</a>
+            </div>
+        </div>
     </div>
 
     <script src="air.js"></script>
@@ -337,82 +541,108 @@
         const messageForm = document.getElementById('messageForm');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
-        const connectionInfo = document.getElementById('connectionInfo');
         const userLabel = document.getElementById('userLabel');
+        const userCount = document.getElementById('userCount');
+        const userList = document.getElementById('userList');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const imageInput = document.getElementById('imageInput');
+        const fileInput = document.getElementById('fileInput');
+        const attachmentPreview = document.getElementById('attachmentPreview');
 
         let userName = '';
         let air = null;
+        let currentAttachment = null;
+        let typingTimeout = null;
 
         const urlParams = new URLSearchParams(window.location.search);
         const room = urlParams.get('room') || 'demo';
-
-        const storedName = localStorage.getItem('name');
-        if (storedName) {
-            userName = storedName;
-            enterChat();
-        } else {
-            nameInput.focus();
-        }
 
         nameForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = nameInput.value.trim();
             if (name) {
                 userName = name;
-                localStorage.setItem('name', userName);
                 enterChat();
             }
         });
 
         function enterChat() {
             nameScreen.style.display = 'none';
-            chatContainer.style.display = 'block';
+            chatContainer.style.display = 'flex';
             userLabel.textContent = `Logged in as ${userName}`;
 
-            air = new Air(room);
+            air = new Air(room, { name: userName });
 
-            air.onConnect(() => {
-                   updateStatus(true);
-                   // Notify others that user joined
-                   air.send({ name: userName, message: 'joined the room', type: 'system' });
-               })
-               .onMessage((data) => {
-                   if (data.type === 'system') {
-                       addSystemMessage(`${data.name} ${data.message}`);
-                   } else {
-                       addMessage(data.name, data.message, 'received');
-                   }
-               })
-               .onSent((data) => {
-                   if (data.type !== 'system') {
-                       addMessage(userName, data.message, 'sent');
-                   }
-                   messageInput.value = '';
-                   messageInput.focus();
-               })
-               .onError(() => {
-                   connectionInfo.textContent = 'Connection error';
-                   connectionInfo.style.color = '#f56565';
-               })
-               .onDisconnect(() => updateStatus(false));
+            air.onConnect((info) => {
+                updateStatus(true);
+            })
+            .onMessage((msg) => {
+                addMessage(msg.sender, msg.data);
+            })
+            .onJoin((user) => {
+                addSystemMessage(`${user.name} joined the chat`);
+            })
+            .onLeave((user) => {
+                addSystemMessage(`${user.name} left the chat`);
+            })
+            .onUserList((users) => {
+                updateUserList(users);
+            })
+            .onTyping((users) => {
+                updateTypingIndicator(users);
+            })
+            .onError(() => {
+                updateStatus(false);
+            })
+            .onDisconnect(() => updateStatus(false));
 
             air.connect();
+        }
 
-            // Notify when user leaves
-            window.addEventListener('beforeunload', () => {
-                if (air && air.isConnected()) {
-                    air.send({ name: userName, message: 'left the room', type: 'system' });
-                }
+        function updateStatus(connected) {
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'status connected';
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'status disconnected';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+            }
+        }
+
+        function updateUserList(users) {
+            userCount.textContent = `${users.length} user${users.length !== 1 ? 's' : ''} online`;
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const tag = document.createElement('div');
+                tag.className = 'user-tag';
+                tag.textContent = user.name;
+                userList.appendChild(tag);
             });
+        }
+
+        function updateTypingIndicator(users) {
+            if (users.length === 0) {
+                typingIndicator.textContent = '';
+            } else if (users.length === 1) {
+                typingIndicator.textContent = `${users[0]} is typing...`;
+            } else if (users.length === 2) {
+                typingIndicator.textContent = `${users[0]} and ${users[1]} are typing...`;
+            } else {
+                typingIndicator.textContent = `${users[0]}, ${users[1]} and ${users.length - 2} others are typing...`;
+            }
         }
 
         function formatTime() {
             return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        function addMessage(sender, text, type) {
+        function addMessage(sender, data) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
+            messageDiv.className = 'message received';
 
             const senderDiv = document.createElement('div');
             senderDiv.className = 'message-sender';
@@ -420,7 +650,26 @@
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.textContent = text;
+
+            if (data.text) {
+                contentDiv.textContent = data.text;
+            }
+
+            if (data.image) {
+                const img = document.createElement('img');
+                img.src = data.image;
+                img.onclick = () => window.open(data.image, '_blank');
+                contentDiv.appendChild(img);
+            }
+
+            if (data.file) {
+                const fileLink = document.createElement('a');
+                fileLink.className = 'file-attachment';
+                fileLink.href = data.file.data;
+                fileLink.download = data.file.name;
+                fileLink.innerHTML = `📎 ${data.file.name} (${formatFileSize(data.file.size)})`;
+                contentDiv.appendChild(fileLink);
+            }
 
             const timeDiv = document.createElement('div');
             timeDiv.className = 'message-time';
@@ -451,29 +700,94 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
-        function updateStatus(connected) {
-            if (connected) {
-                status.textContent = 'Connected';
-                status.className = 'status connected';
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                connectionInfo.textContent = `Connected to room: ${room}`;
-                connectionInfo.style.color = '#48bb78';
-            } else {
-                status.textContent = 'Disconnected';
-                status.className = 'status disconnected';
-                messageInput.disabled = true;
-                sendBtn.disabled = true;
-                connectionInfo.textContent = 'Reconnecting...';
-                connectionInfo.style.color = '#f56565';
-            }
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image must be less than 2MB');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentAttachment = { type: 'image', data: event.target.result };
+                    showAttachmentPreview('Image', file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File must be less than 2MB');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentAttachment = {
+                        type: 'file',
+                        data: event.target.result,
+                        name: file.name,
+                        size: file.size
+                    };
+                    showAttachmentPreview('File', file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function showAttachmentPreview(type, name) {
+            attachmentPreview.innerHTML = `
+                <div class="attachment-preview">
+                    <span>${type}: ${name}</span>
+                    <button onclick="clearAttachment()">Remove</button>
+                </div>
+            `;
+        }
+
+        function clearAttachment() {
+            currentAttachment = null;
+            attachmentPreview.innerHTML = '';
+            imageInput.value = '';
+            fileInput.value = '';
+        }
+
+        messageInput.addEventListener('input', () => {
+            if (air && air.isConnected()) {
+                air.typing();
+            }
+        });
 
         messageForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const message = messageInput.value.trim();
-            if (message && air && air.isConnected()) {
-                air.send({ name: userName, message: message });
+            const text = messageInput.value.trim();
+
+            if ((text || currentAttachment) && air && air.isConnected()) {
+                const data = { text };
+
+                if (currentAttachment) {
+                    if (currentAttachment.type === 'image') {
+                        data.image = currentAttachment.data;
+                    } else if (currentAttachment.type === 'file') {
+                        data.file = {
+                            data: currentAttachment.data,
+                            name: currentAttachment.name,
+                            size: currentAttachment.size
+                        };
+                    }
+                }
+
+                air.send(data);
+                messageInput.value = '';
+                clearAttachment();
+                messageInput.focus();
             }
         });
     </script>
