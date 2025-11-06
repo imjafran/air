@@ -1,125 +1,105 @@
-# Quick Deployment to AWS Lightsail
+# Air - Quick Start Guide
 
-## What You Need
+## Deploy to AWS Lightsail (Git Workflow)
 
-1. **AWS Lightsail account**
-2. **Domain DNS access** (to add A record for `air.arraystory.com`)
-3. **Your email** (for SSL certificate)
+### On Local Machine
 
-## Quick Steps
-
-### 1. Create Lightsail Instance
-- Go to AWS Lightsail → Create instance
-- Choose: **Ubuntu 22.04 LTS**
-- Plan: **$5/month or higher**
-- Create **static IP** and note it down
-
-### 2. Configure DNS
-Add A record:
-```
-Type: A
-Host: air
-Value: [Your Lightsail Static IP]
-```
-
-### 3. SSH and Install Docker
 ```bash
-ssh ubuntu@air.arraystory.com
-
-# Install Docker
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker ubuntu
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Apply docker group without logging out
-newgrp docker
+# 1. Commit and push
+git add .
+git commit -m "Deploy to production"
+git push origin main
 ```
 
-### 4. Clone Repository and Set Up
+### On VPS
+
 ```bash
-ssh ubuntu@air.arraystory.com
-cd ~
-git clone [your-repo-url] .
-
-# Set up environment file
-cp .env.production .env
-nano .env  # Change passwords!
-```
-
-### 6. Get SSL Certificate
-```bash
-mkdir -p certbot/conf certbot/www
-
-sudo docker run -it --rm -p 80:80 \
-  -v "$(pwd)/certbot/conf:/etc/letsencrypt" \
-  -v "$(pwd)/certbot/www:/var/www/certbot" \
-  certbot/certbot certonly --standalone \
-  --email jafraaan@gmail.com \
-  --agree-tos \
-  --no-eff-email \
-  -d air.arraystory.com
-```
-
-### 7. Start Services
-```bash
-# Fix certbot permissions if needed
-if [ -d "certbot" ]; then
-    sudo chown -R $USER:$USER certbot
-fi
-
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### 8. Set Up Database
-```bash
-docker exec -it air_mysql mysql -u root -p
-
-# Then run:
-USE air_production;
-
-INSERT INTO air_rooms (name, description, is_active) VALUES
-('demo', 'Production demo room', TRUE);
-
-INSERT INTO air_room_domains (room_id, domain) VALUES
-(1, 'air.arraystory.com');
-
-INSERT INTO air_api_tokens (token, room_id, name, is_active) VALUES
-('YOUR_SECURE_TOKEN', 1, 'Production Token', TRUE);
-
-EXIT;
-```
-
-### 9. Test
-Visit: **https://air.arraystory.com/**
-
-## Updating Your Deployment
-
-After pushing changes to Git:
-```bash
-ssh ubuntu@air.arraystory.com
-cd ~
+# 2. Pull and setup
+ssh ubuntu@YOUR_SERVER_IP
+cd ~/air
 git pull
-docker compose -f docker-compose.prod.yml up -d --build
+./setup-vps.sh
+
+# 3. Done! Visit:
+# https://air.arraystory.com
 ```
 
-## Files Created
+## Local Development
 
-- ✅ `air.prod.js` - Production WebSocket client (wss://)
-- ✅ `docker-compose.prod.yml` - Production Docker setup with nginx
-- ✅ `nginx.conf` - Reverse proxy with SSL and WebSocket support
-- ✅ `.env.production` - Production environment template
-- ✅ `deploy.sh` - Automated deployment script
-- ✅ `DEPLOYMENT.md` - Complete deployment guide
+```bash
+# Start
+docker compose up -d
 
-## Important Security Notes
+# View logs
+docker compose logs -f
 
-1. **Change passwords** in `.env` file
-2. **Generate secure API token**: `openssl rand -hex 32`
-3. **Enable Lightsail snapshots** for backups
+# Access
+open http://localhost:8282
+```
 
-## Need Help?
+## Update/Redeploy
 
-See detailed guide: **DEPLOYMENT.md**
+### On Local Machine
+
+```bash
+git add .
+git commit -m "Update"
+git push
+```
+
+### On VPS
+
+```bash
+ssh ubuntu@YOUR_SERVER_IP
+cd ~/air
+
+# Pull updates
+git pull
+
+# Rebuild and restart
+docker compose -f docker-compose.prod.yml up -d --build
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# Check status
+docker compose -f docker-compose.prod.yml ps
+```
+
+## Client Usage
+
+```html
+<script src="https://air.arraystory.com/air.js"></script>
+<script>
+const air = new Air('room-name');
+air.onMessage((data) => console.log(data));
+air.connect();
+air.send({ hello: 'world' });
+</script>
+```
+
+## API Usage
+
+```bash
+curl -X POST https://air.arraystory.com/emit \
+  -H "Authorization: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello!"}'
+```
+
+## Troubleshooting
+
+```bash
+# Check deployment readiness
+./pre-deploy-check.sh YOUR_SERVER_IP
+
+# View server logs
+ssh ubuntu@YOUR_SERVER_IP "cd ~/air && docker compose -f docker-compose.prod.yml logs --tail=50"
+
+# Check if services are running
+ssh ubuntu@YOUR_SERVER_IP "cd ~/air && docker compose -f docker-compose.prod.yml ps"
+```
+
+## Full Guide
+
+See [DEPLOY.md](DEPLOY.md) for complete step-by-step instructions.
