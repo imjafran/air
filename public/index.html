@@ -737,12 +737,15 @@
                 addMessage(msg);
             })
             .onJoin((user) => {
+                console.log('User joined:', user);
                 addSystemMessage(`${user.name} joined the chat`);
             })
             .onLeave((user) => {
+                console.log('User left:', user);
                 addSystemMessage(`${user.name} left the chat`);
             })
             .onUserList((users) => {
+                console.log('User list received:', users);
                 updateUserList(users);
             })
             .onTyping((users) => {
