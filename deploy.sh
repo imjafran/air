@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Air Deployment Script for AWS Lightsail
+# Air Deployment Script (No Docker)
 # Usage: ./deploy.sh [server-ip-or-domain]
 
 set -e
@@ -24,6 +24,9 @@ tar -czf air-deploy.tar.gz \
     --exclude='*.log' \
     --exclude='*.bak*' \
     --exclude='*.temp' \
+    --exclude='air-deploy.tar.gz' \
+    --exclude='Dockerfile' \
+    --exclude='docker-compose*.yml' \
     .
 
 # Upload to server
@@ -33,35 +36,33 @@ scp air-deploy.tar.gz ubuntu@$SERVER:~/
 # Connect and deploy
 echo "🔧 Setting up on server..."
 ssh ubuntu@$SERVER << 'ENDSSH'
+    # Create air directory if not exists
+    mkdir -p ~/air
+    cd ~/air
+
     # Extract files
-    cd ~
-    tar -xzf air-deploy.tar.gz
-    rm air-deploy.tar.gz
+    tar -xzf ~/air-deploy.tar.gz
+    rm ~/air-deploy.tar.gz
 
-    # Set up environment if not exists
-    if [ ! -f .env ]; then
-        echo "⚙️  Setting up environment file..."
-        cp .env.production .env
-        echo "⚠️  IMPORTANT: Edit ~/.env with production passwords!"
+    # Check if this is first time setup
+    if ! command -v go &> /dev/null || ! systemctl is-active --quiet air; then
+        echo "🔧 Running first-time setup..."
+        echo "⚠️  You will be prompted for MySQL passwords"
+        chmod +x setup.sh
+        ./setup.sh
+    else
+        echo "🔄 Running update..."
+        chmod +x update.sh
+        ./update.sh
     fi
-
-    # Fix certbot directory permissions if it exists
-    if [ -d "certbot" ]; then
-        echo "🔧 Fixing certbot permissions..."
-        sudo chown -R $USER:$USER certbot
-    fi
-
-    # Build and start
-    echo "🐳 Starting Docker containers..."
-    docker compose -f docker-compose.prod.yml up -d --build
 
     echo "✅ Deployment complete!"
     echo ""
     echo "Check status with:"
-    echo "  docker compose -f docker-compose.prod.yml ps"
+    echo "  sudo systemctl status air"
     echo ""
     echo "View logs with:"
-    echo "  docker compose -f docker-compose.prod.yml logs -f"
+    echo "  sudo journalctl -u air -f"
 ENDSSH
 
 # Cleanup
@@ -69,4 +70,4 @@ rm air-deploy.tar.gz
 
 echo ""
 echo "✨ Deployment finished!"
-echo "🌐 Visit: https://$SERVER/"
+echo "🌐 Visit: http://$SERVER/ (or https:// after SSL setup)"

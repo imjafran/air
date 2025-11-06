@@ -365,11 +365,11 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	// Database configuration from environment
-	dbHost := getEnv("DB_HOST", "mysql")
+	dbHost := getEnv("DB_HOST", "localhost")
 	dbPort := getEnv("DB_PORT", "3306")
-	dbUser := getEnv("DB_USER", "realtime")
-	dbPass := getEnv("DB_PASSWORD", "realtime123")
-	dbName := getEnv("DB_NAME", "realtime")
+	dbUser := getEnv("DB_USER", "air_user")
+	dbPass := getEnv("DB_PASSWORD", "")
+	dbName := getEnv("DB_NAME", "air_production")
 
 	// Create database connection string
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPass, dbHost, dbPort, dbName)
