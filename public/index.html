@@ -941,10 +941,14 @@
         });
 
         messageForm.addEventListener('submit', (e) => {
+            console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
             e.preventDefault();
             const text = messageInput.value.trim();
 
-            console.log('Form submitted! Text:', text, 'Connected:', air && air.isConnected());
+            console.log('Text value:', text);
+            console.log('Air object:', air);
+            console.log('Air is connected:', air ? air.isConnected() : 'air is null');
+            console.log('Current attachment:', currentAttachment);
 
             if ((text || currentAttachment) && air && air.isConnected()) {
                 const data = { text };
@@ -961,16 +965,21 @@
                     }
                 }
 
-                console.log('Sending data:', data);
+                console.log('Calling air.send() with data:', data);
                 air.send(data);
-                console.log('Message sent!');
+                console.log('air.send() called successfully');
                 messageInput.value = '';
                 clearAttachment();
                 messageInput.focus();
             } else {
-                console.log('Not sending - text/attachment missing or not connected');
+                console.log('NOT SENDING - Condition failed:');
+                console.log('  - Has text or attachment?', !!(text || currentAttachment));
+                console.log('  - Air exists?', !!air);
+                console.log('  - Air connected?', air ? air.isConnected() : 'N/A');
             }
         });
+
+        console.log('Message form submit listener attached to:', messageForm);
     </script>
 </body>
 </html>
