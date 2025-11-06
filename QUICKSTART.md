@@ -49,13 +49,13 @@ cd /Users/jafran/Workstation/R\&D/GO/realtime
 
 Or manually:
 ```bash
-scp -r * ubuntu@air.arraystory.com:~/air/
+scp -r * ubuntu@air.arraystory.com:~/
 ```
 
 ### 5. Set Up Environment
 ```bash
 ssh ubuntu@air.arraystory.com
-cd ~/air
+cd ~
 cp .env.production .env
 nano .env  # Change passwords!
 ```
@@ -76,7 +76,7 @@ sudo docker run -it --rm -p 80:80 \
 
 ### 7. Start Services
 ```bash
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### 8. Set Up Database

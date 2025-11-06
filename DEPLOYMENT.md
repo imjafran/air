@@ -90,13 +90,7 @@ ssh ubuntu@air.arraystory.com
 
 ## Step 5: Deploy Application
 
-1. **Create application directory**
-   ```bash
-   mkdir -p ~/air
-   cd ~/air
-   ```
-
-2. **Upload files to server**
+1. **Upload files to server**
 
    From your local machine:
    ```bash
@@ -104,19 +98,19 @@ ssh ubuntu@air.arraystory.com
    cd /Users/jafran/Workstation/R\&D/GO/realtime
 
    # Upload files using scp
-   scp -r * ubuntu@air.arraystory.com:~/air/
+   scp -r * ubuntu@air.arraystory.com:~/
    ```
 
    Or use Git:
    ```bash
    # On server
-   cd ~/air
+   cd ~
    git clone [your-repo-url] .
    ```
 
-3. **Set up production environment**
+2. **Set up production environment**
    ```bash
-   cd ~/air
+   cd ~
 
    # Copy production env file
    cp .env.production .env
@@ -130,7 +124,7 @@ ssh ubuntu@air.arraystory.com
 
 1. **Initial certificate setup (nginx NOT running yet)**
    ```bash
-   cd ~/air
+   cd ~
 
    # Create directories
    mkdir -p certbot/conf certbot/www
@@ -164,13 +158,13 @@ ssh ubuntu@air.arraystory.com
 ## Step 7: Start Application
 
 ```bash
-cd ~/air
+cd ~
 
 # Build and start services
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Check logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Check running containers
 docker ps
@@ -240,34 +234,34 @@ EXIT;
 ### View Logs
 ```bash
 # All services
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Specific service
-docker-compose -f docker-compose.prod.yml logs -f go-app
-docker-compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.prod.yml logs -f go-app
+docker compose -f docker-compose.prod.yml logs -f nginx
 ```
 
 ### Restart Services
 ```bash
-docker-compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.prod.yml restart
 ```
 
 ### Update Application
 ```bash
-cd ~/air
+cd ~
 
 # Pull latest changes (if using Git)
 git pull
 
 # Rebuild and restart
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### Check SSL Certificate Renewal
 ```bash
 # Certbot auto-renews every 12 hours
 # Manually test renewal:
-docker-compose -f docker-compose.prod.yml exec certbot certbot renew --dry-run
+docker compose -f docker-compose.prod.yml exec certbot certbot renew --dry-run
 ```
 
 ### Database Backup
@@ -284,16 +278,16 @@ docker exec -i air_mysql mysql -u root -p air_production < backup_20231106.sql
 ### WebSocket connection fails
 - Check if nginx is running: `docker ps | grep nginx`
 - Check nginx logs: `docker logs air_nginx`
-- Verify SSL certificate: `sudo ls -la ~/air/certbot/conf/live/air.arraystory.com/`
+- Verify SSL certificate: `sudo ls -la ~/certbot/conf/live/air.arraystory.com/`
 
 ### Database connection refused
 - Check if MySQL is running: `docker ps | grep mysql`
 - Check MySQL logs: `docker logs air_mysql`
-- Verify environment variables: `cat ~/air/.env`
+- Verify environment variables: `cat ~/.env`
 
 ### 502 Bad Gateway
 - Go app might not be running: `docker logs air_go`
-- Restart services: `docker-compose -f docker-compose.prod.yml restart`
+- Restart services: `docker compose -f docker-compose.prod.yml restart`
 
 ### SSL certificate issues
 - Re-run certbot: See Step 6

@@ -34,29 +34,28 @@ scp air-deploy.tar.gz ubuntu@$SERVER:~/
 echo "🔧 Setting up on server..."
 ssh ubuntu@$SERVER << 'ENDSSH'
     # Extract files
-    mkdir -p ~/air
-    cd ~/air
-    tar -xzf ../air-deploy.tar.gz
-    rm ../air-deploy.tar.gz
+    cd ~
+    tar -xzf air-deploy.tar.gz
+    rm air-deploy.tar.gz
 
     # Set up environment if not exists
     if [ ! -f .env ]; then
         echo "⚙️  Setting up environment file..."
         cp .env.production .env
-        echo "⚠️  IMPORTANT: Edit ~/air/.env with production passwords!"
+        echo "⚠️  IMPORTANT: Edit ~/.env with production passwords!"
     fi
 
     # Build and start
     echo "🐳 Starting Docker containers..."
-    docker-compose -f docker-compose.prod.yml up -d --build
+    docker compose -f docker-compose.prod.yml up -d --build
 
     echo "✅ Deployment complete!"
     echo ""
     echo "Check status with:"
-    echo "  docker-compose -f ~/air/docker-compose.prod.yml ps"
+    echo "  docker compose -f docker-compose.prod.yml ps"
     echo ""
     echo "View logs with:"
-    echo "  docker-compose -f ~/air/docker-compose.prod.yml logs -f"
+    echo "  docker compose -f docker-compose.prod.yml logs -f"
 ENDSSH
 
 # Cleanup
