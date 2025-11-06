@@ -10,7 +10,7 @@
 
 class Air {
     constructor(room) {
-        this.serverUrl = 'ws://localhost:8282';
+        this.serverUrl = 'wss://air.arraystory.com';
         this.room = room;
         this.ws = null;
         this.listeners = {};
