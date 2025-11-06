@@ -730,12 +730,10 @@
             air = new Air(room, { name: userName });
 
             air.onConnect((info) => {
-                console.log('Connected!', info);
                 updateStatus(true);
                 addSystemMessage(`Welcome to AirStory Demo! You're now connected to room "${room}"`);
             })
             .onMessage((msg) => {
-                console.log('Message received:', msg);
                 addMessage(msg.sender, msg.data);
             })
             .onJoin((user) => {
@@ -941,14 +939,8 @@
         });
 
         messageForm.addEventListener('submit', (e) => {
-            console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
             e.preventDefault();
             const text = messageInput.value.trim();
-
-            console.log('Text value:', text);
-            console.log('Air object:', air);
-            console.log('Air is connected:', air ? air.isConnected() : 'air is null');
-            console.log('Current attachment:', currentAttachment);
 
             if ((text || currentAttachment) && air && air.isConnected()) {
                 const data = { text };
@@ -965,21 +957,12 @@
                     }
                 }
 
-                console.log('Calling air.send() with data:', data);
                 air.send(data);
-                console.log('air.send() called successfully');
                 messageInput.value = '';
                 clearAttachment();
                 messageInput.focus();
-            } else {
-                console.log('NOT SENDING - Condition failed:');
-                console.log('  - Has text or attachment?', !!(text || currentAttachment));
-                console.log('  - Air exists?', !!air);
-                console.log('  - Air connected?', air ? air.isConnected() : 'N/A');
             }
         });
-
-        console.log('Message form submit listener attached to:', messageForm);
     </script>
 </body>
 </html>
