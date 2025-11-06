@@ -750,6 +750,7 @@
                 updateUserList(users);
             })
             .onTyping((users) => {
+                console.log('Typing event received, users:', users);
                 updateTypingIndicator(users);
             })
             .onError(() => {
@@ -803,6 +804,7 @@
         }
 
         function updateTypingIndicator(users) {
+            console.log('Updating typing indicator with users:', users);
             if (users.length === 0) {
                 typingIndicator.textContent = '';
             } else if (users.length === 1) {
@@ -948,6 +950,7 @@
 
         messageInput.addEventListener('input', () => {
             if (air && air.isConnected()) {
+                console.log('Sending typing indicator...');
                 air.typing();
             }
         });
