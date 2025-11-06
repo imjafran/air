@@ -731,8 +731,20 @@
             air = new Air(room, { name: userName });
 
             air.onConnect((info) => {
+                console.log('✅ Connected to WebSocket');
                 updateStatus(true);
                 addSystemMessage(`Welcome to AirStory Demo! You're now connected to room "${room}"`);
+
+                // Request initial user list
+                console.log('📋 Requesting initial user list...');
+                // Check if users already exist
+                const users = air.getUsers();
+                console.log('Current users from air.getUsers():', users);
+                if (users && users.length > 0) {
+                    updateUserList(users);
+                } else {
+                    console.log('No users yet, waiting for userlist message...');
+                }
             })
             .onMessage((msg) => {
                 addMessage(msg);
