@@ -82,10 +82,12 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker --version
 docker-compose --version
 
-# Log out and back in for docker group to take effect
-exit
-# SSH back in
-ssh ubuntu@air.arraystory.com
+# Apply docker group without logging out
+newgrp docker
+
+# OR log out and back in
+# exit
+# ssh ubuntu@air.arraystory.com
 ```
 
 ## Step 5: Deploy Application
@@ -274,6 +276,17 @@ docker exec -i air_mysql mysql -u root -p air_production < backup_20231106.sql
 ```
 
 ## Troubleshooting
+
+### Docker permission denied
+If you get "permission denied" when running docker commands:
+```bash
+# Activate docker group immediately
+newgrp docker
+
+# Or log out and back in
+exit
+ssh ubuntu@air.arraystory.com
+```
 
 ### WebSocket connection fails
 - Check if nginx is running: `docker ps | grep nginx`

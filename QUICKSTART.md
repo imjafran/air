@@ -34,9 +34,8 @@ sudo usermod -aG docker ubuntu
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Log out and back in
-exit
-ssh ubuntu@air.arraystory.com
+# Apply docker group without logging out
+newgrp docker
 ```
 
 ### 4. Upload Files
