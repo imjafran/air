@@ -753,27 +753,16 @@
                 addMessage(msg);
             })
             .onJoin((user) => {
-                console.log('User joined:', user);
-                if (user && user.name) {
-                    addSystemMessage(`${user.name} joined the chat`);
-                }
-                // Force update user list if we have users
-                const currentUsers = air.getUsers();
-                console.log('After join, current users:', currentUsers);
-                if (currentUsers && currentUsers.length > 0) {
-                    updateUserList(currentUsers);
+                console.log('✅ User joined event:', user);
+                if (user && user.name && user.name !== userName) {
+                    // Only show join message for other users, not yourself
+                    addSystemMessage(`👋 ${user.name} joined the chat`);
                 }
             })
             .onLeave((user) => {
-                console.log('User left:', user);
+                console.log('👋 User left event:', user);
                 if (user && user.name) {
-                    addSystemMessage(`${user.name} left the chat`);
-                }
-                // Force update user list if we have users
-                const currentUsers = air.getUsers();
-                console.log('After leave, current users:', currentUsers);
-                if (currentUsers && currentUsers.length > 0) {
-                    updateUserList(currentUsers);
+                    addSystemMessage(`👋 ${user.name} left the chat`);
                 }
             })
             .onUserList((users) => {
@@ -1007,16 +996,61 @@
             fileInput.value = '';
         }
 
+        let typingTimer = null;
+        let isTyping = false;
+
         messageInput.addEventListener('input', () => {
             if (air && air.isConnected()) {
-                console.log('Sending typing indicator...');
-                air.typing();
+                // If not already typing, send typing started
+                if (!isTyping) {
+                    isTyping = true;
+                    console.log('Started typing - sending typing indicator');
+                    air.typing();
+                }
+
+                // Clear existing timer
+                if (typingTimer) {
+                    clearTimeout(typingTimer);
+                }
+
+                // Set timer to send "stopped typing" after 2 seconds of no input
+                typingTimer = setTimeout(() => {
+                    if (isTyping) {
+                        isTyping = false;
+                        console.log('Stopped typing - sending stop indicator');
+                        // Send stopped typing message
+                        if (air.ws && air.ws.readyState === WebSocket.OPEN) {
+                            const payload = {
+                                channel: room,
+                                type: "typingStopped"
+                            };
+                            air.ws.send(JSON.stringify(payload));
+                        }
+                    }
+                }, 2000);
             }
         });
 
         messageForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const text = messageInput.value.trim();
+
+            // Clear typing indicator when sending message
+            if (typingTimer) {
+                clearTimeout(typingTimer);
+            }
+            if (isTyping) {
+                isTyping = false;
+                console.log('Message sent - clearing typing indicator');
+                // Send stopped typing message
+                if (air && air.ws && air.ws.readyState === WebSocket.OPEN) {
+                    const payload = {
+                        channel: room,
+                        type: "typingStopped"
+                    };
+                    air.ws.send(JSON.stringify(payload));
+                }
+            }
 
             if ((text || currentAttachment) && air && air.isConnected()) {
                 const payload = {
