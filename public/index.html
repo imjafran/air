@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirSocket Demo - Real-time Anonymous Chat</title>
+    <title>AirStory - Real-time Chat Demo</title>
     <style>
         * {
             margin: 0;
@@ -11,14 +11,29 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #5469d4;
+            --primary-hover: #4355c8;
+            --text-primary: #1a1f36;
+            --text-secondary: #697386;
+            --text-tertiary: #8792a2;
+            --border: #e3e8ee;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --success: #24b47e;
+            --radius: 6px;
+            --shadow-sm: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         .name-screen {
@@ -26,103 +41,101 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            width: 100%;
+            padding: 20px;
         }
 
         .name-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            text-align: center;
-            max-width: 450px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            padding: 48px 40px;
+            max-width: 440px;
             width: 100%;
+            border: 1px solid var(--border);
         }
 
         .name-container h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
         }
 
         .name-container .subtitle {
-            color: #718096;
-            margin-bottom: 8px;
-            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 15px;
         }
 
         .name-container .disclaimer {
-            color: #a0aec0;
-            font-size: 0.875rem;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            color: var(--text-secondary);
             line-height: 1.5;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
         }
 
-        .name-container .info {
-            background: #edf2f7;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            font-size: 0.875rem;
-            color: #4a5568;
-        }
-
-        .name-container .info strong {
-            color: #2d3748;
+        .name-container .disclaimer strong {
+            color: var(--text-primary);
         }
 
         .name-container form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
         .name-container input {
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1rem;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 15px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         .name-container input:focus {
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(84, 105, 212, 0.1);
         }
 
         .name-container button {
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 11px 16px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background-color 0.15s, transform 0.1s;
         }
 
         .name-container button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            background: var(--primary-hover);
+        }
+
+        .name-container button:active {
+            transform: translateY(1px);
         }
 
         .name-container .footer-link {
-            margin-top: 20px;
-            font-size: 0.875rem;
-            color: #718096;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+            text-align: center;
         }
 
         .name-container .footer-link a {
-            color: #667eea;
+            color: var(--primary);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .name-container .footer-link a:hover {
@@ -130,22 +143,21 @@
         }
 
         .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: var(--bg-primary);
             width: 100%;
-            max-width: 800px;
-            height: 90vh;
-            max-height: 700px;
-            overflow: hidden;
+            max-width: 900px;
+            height: 100vh;
+            margin: 0 auto;
             display: none;
             flex-direction: column;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
             flex-shrink: 0;
         }
 
@@ -153,67 +165,62 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
         }
 
         .status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255,255,255,0.2);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
         }
 
         .status::before {
             content: '';
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            display: inline-block;
+            background: var(--text-tertiary);
+        }
+
+        .status.connected {
+            color: var(--success);
         }
 
         .status.connected::before {
-            background: #48bb78;
-            animation: pulse 2s infinite;
-        }
-
-        .status.disconnected::before {
-            background: #f56565;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            background: var(--success);
         }
 
         .header-info {
-            font-size: 0.875rem;
-            opacity: 0.9;
+            font-size: 13px;
+            color: var(--text-tertiary);
         }
 
         .messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: #f7fafc;
+            padding: 24px;
+            background: var(--bg-secondary);
         }
 
         .message {
-            margin-bottom: 16px;
-            animation: slideIn 0.3s ease-out;
+            margin-bottom: 20px;
+            animation: fadeIn 0.2s ease-out;
         }
 
-        @keyframes slideIn {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(4px);
             }
             to {
                 opacity: 1;
@@ -221,48 +228,51 @@
             }
         }
 
-        .message.received {
-            text-align: left;
-        }
-
         .message-sender {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
         }
 
         .message-content {
             display: inline-block;
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 75%;
             word-wrap: break-word;
-            background: #e2e8f0;
-            color: #2d3748;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .message-content img {
             max-width: 100%;
-            border-radius: 8px;
-            margin-top: 5px;
+            border-radius: 6px;
+            margin-top: 8px;
             cursor: pointer;
+            border: 1px solid var(--border);
         }
 
         .message-content .file-attachment {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            background: rgba(0,0,0,0.05);
-            border-radius: 8px;
-            margin-top: 5px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-top: 8px;
             text-decoration: none;
-            color: inherit;
+            color: var(--text-primary);
+            font-size: 13px;
+            border: 1px solid var(--border);
         }
 
         .message-content .file-attachment:hover {
-            background: rgba(0,0,0,0.1);
+            background: var(--bg-secondary);
         }
 
         .message.system {
@@ -271,10 +281,12 @@
 
         .message.system .message-content {
             background: transparent;
-            color: #718096;
-            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            font-size: 13px;
             font-style: italic;
-            padding: 5px 10px;
+            padding: 8px 12px;
+            box-shadow: none;
+            border: none;
         }
 
         .message.system .message-sender {
@@ -282,92 +294,147 @@
         }
 
         .message-time {
-            font-size: 0.7rem;
-            color: #a0aec0;
+            font-size: 12px;
+            color: var(--text-tertiary);
             margin-top: 4px;
         }
 
         .typing-indicator {
-            font-size: 0.875rem;
-            color: #718096;
+            font-size: 13px;
+            color: var(--text-tertiary);
             font-style: italic;
-            padding: 10px 20px;
-            min-height: 20px;
+            padding: 8px 24px;
+            min-height: 30px;
         }
 
         .input-area {
-            padding: 15px 20px;
-            background: white;
-            border-top: 1px solid #e2e8f0;
+            position: relative;
+            padding: 16px 24px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
             flex-shrink: 0;
-        }
-
-        .input-controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .input-controls button {
-            padding: 8px 12px;
-            background: #edf2f7;
-            color: #4a5568;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .input-controls button:hover {
-            background: #e2e8f0;
         }
 
         .input-form {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
+        }
+
+        .attach-button {
+            padding: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .attach-button:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+        }
+
+        .attach-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .input-form input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 25px;
-            font-size: 1rem;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         .input-form input:focus {
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(84, 105, 212, 0.1);
         }
 
-        .input-form button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .send-button {
+            padding: 0;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 50%;
+            font-size: 18px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background-color 0.15s, transform 0.1s;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .input-form button:hover:not(:disabled) {
+        .send-button:hover:not(:disabled) {
+            background: var(--primary-hover);
             transform: scale(1.05);
         }
 
-        .input-form button:disabled {
-            opacity: 0.5;
+        .send-button:disabled {
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
+        .attach-menu {
+            display: none;
+            position: absolute;
+            bottom: 70px;
+            left: 24px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            padding: 8px;
+            gap: 4px;
+            flex-direction: column;
+            min-width: 140px;
+        }
+
+        .attach-menu.show {
+            display: flex;
+        }
+
+        .attach-menu button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.15s;
+        }
+
+        .attach-menu button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .attach-menu button span {
+            font-size: 18px;
+        }
+
         .footer {
-            padding: 12px 20px;
-            background: #f7fafc;
-            border-top: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border);
             flex-shrink: 0;
         }
 
@@ -375,31 +442,32 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .user-count {
-            font-size: 0.875rem;
-            color: #4a5568;
-            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .user-list {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+            margin-bottom: 10px;
         }
 
         .user-tag {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             padding: 4px 10px;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            font-size: 0.75rem;
-            color: #4a5568;
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
         .user-tag::before {
@@ -407,87 +475,136 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #48bb78;
+            background: var(--success);
         }
 
-        .footer-link {
+        .footer-branding {
             text-align: center;
-            font-size: 0.75rem;
-            color: #718096;
-            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-tertiary);
         }
 
-        .footer-link a {
-            color: #667eea;
+        .footer-branding strong {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .footer-branding a {
+            color: var(--primary);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         input[type="file"] {
             display: none;
         }
 
-        .preview {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
-
         .attachment-preview {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            background: #edf2f7;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
             border-radius: 8px;
             margin-bottom: 10px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .attachment-preview-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1px solid var(--border);
+        }
+
+        .attachment-preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .attachment-preview-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .attachment-preview-size {
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
         .attachment-preview button {
-            padding: 4px 8px;
-            background: #f56565;
-            color: white;
+            padding: 6px 6px;
+            background: transparent;
+            color: var(--text-tertiary);
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+
+        .attachment-preview button:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
         @media (max-width: 768px) {
             .container {
-                max-height: 100vh;
-                height: 100vh;
-                border-radius: 0;
-            }
-
-            .header h1 {
-                font-size: 1.25rem;
-            }
-
-            .message-content {
-                max-width: 90%;
+                max-width: 100%;
+                border-left: none;
+                border-right: none;
             }
 
             .name-container {
-                padding: 30px 20px;
+                padding: 32px 24px;
             }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+
+        /* Scrollbar styling */
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
         }
     </style>
 </head>
 <body>
     <div class="name-screen" id="nameScreen">
         <div class="name-container">
-            <h1>AirSocket</h1>
-            <p class="subtitle">Anonymous Real-time Chat Demo</p>
+            <h1>AirStory</h1>
+            <p class="subtitle">Real-time Anonymous Chat Demo</p>
             <div class="disclaimer">
-                <strong>Demo Showcase:</strong> This is a dummy anonymous chat built as a showcase of <strong>AirSocket by ArrayStory</strong>. The library is <strong>less than 1KB</strong> and you can easily integrate it into your application within minutes!
-            </div>
-            <div class="info">
-                Share images (up to 2MB), files (up to 2MB), and see real-time typing indicators!
+                <strong>Demo Showcase:</strong> This is a demonstration of AirStory by ArrayStory. The library is less than 1KB and integrates into your application in minutes.
             </div>
             <form id="nameForm">
-                <input type="text" id="nameInput" placeholder="Enter your name..." autocomplete="off" maxlength="20" required>
+                <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off" maxlength="20" required>
                 <button type="submit">Join Chat</button>
             </form>
             <div class="footer-link">
@@ -499,7 +616,7 @@
     <div class="container" id="chatContainer">
         <div class="header">
             <div class="header-top">
-                <h1>AirSocket Demo</h1>
+                <h1>AirStory Demo</h1>
                 <div class="status disconnected" id="status">Disconnected</div>
             </div>
             <div class="header-info" id="userLabel"></div>
@@ -508,24 +625,33 @@
         <div class="typing-indicator" id="typingIndicator"></div>
         <div class="input-area">
             <div id="attachmentPreview"></div>
-            <div class="input-controls">
-                <button onclick="document.getElementById('imageInput').click()">📷 Image</button>
-                <button onclick="document.getElementById('fileInput').click()">📎 File</button>
+            <div class="attach-menu" id="attachMenu">
+                <button onclick="selectImage()">
+                    <span>📷</span> Photo
+                </button>
+                <button onclick="selectFile()">
+                    <span>📎</span> File
+                </button>
             </div>
             <form class="input-form" id="messageForm">
+                <button type="button" class="attach-button" id="attachBtn" disabled onclick="toggleAttachMenu()">
+                    ➕
+                </button>
                 <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" disabled>
-                <button type="submit" id="sendBtn" disabled>Send</button>
+                <button type="submit" class="send-button" id="sendBtn" disabled>
+                    ➤
+                </button>
             </form>
-            <input type="file" id="imageInput" accept="image/*">
-            <input type="file" id="fileInput">
+            <input type="file" id="imageInput" accept="image/*" style="display:none">
+            <input type="file" id="fileInput" style="display:none">
         </div>
         <div class="footer">
             <div class="footer-top">
                 <div class="user-count" id="userCount">0 users online</div>
             </div>
             <div class="user-list" id="userList"></div>
-            <div class="footer-link">
-                Powered by <strong>AirSocket</strong> (&lt;1KB) | <a href="https://arraystory.com/air" target="_blank">arraystory.com/air</a>
+            <div class="footer-branding">
+                Powered by <strong>AirStory</strong> (&lt;1KB) · <a href="https://arraystory.com/air" target="_blank">arraystory.com/air</a>
             </div>
         </div>
     </div>
@@ -548,20 +674,50 @@
         const imageInput = document.getElementById('imageInput');
         const fileInput = document.getElementById('fileInput');
         const attachmentPreview = document.getElementById('attachmentPreview');
+        const attachBtn = document.getElementById('attachBtn');
+        const attachMenu = document.getElementById('attachMenu');
 
         let userName = '';
         let air = null;
         let currentAttachment = null;
-        let typingTimeout = null;
 
         const urlParams = new URLSearchParams(window.location.search);
         const room = urlParams.get('room') || 'demo';
+
+        // Close attach menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
+                attachMenu.classList.remove('show');
+            }
+        });
+
+        function toggleAttachMenu() {
+            attachMenu.classList.toggle('show');
+        }
+
+        function selectImage() {
+            imageInput.click();
+            attachMenu.classList.remove('show');
+        }
+
+        function selectFile() {
+            fileInput.click();
+            attachMenu.classList.remove('show');
+        }
+
+        // Check for stored name and auto-join
+        const storedName = localStorage.getItem('name');
+        if (storedName) {
+            userName = storedName;
+            enterChat();
+        }
 
         nameForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = nameInput.value.trim();
             if (name) {
                 userName = name;
+                localStorage.setItem('name', userName);
                 enterChat();
             }
         });
@@ -575,6 +731,7 @@
 
             air.onConnect((info) => {
                 updateStatus(true);
+                addSystemMessage(`Welcome to AirStory Demo! You're now connected to room "${room}"`);
             })
             .onMessage((msg) => {
                 addMessage(msg.sender, msg.data);
@@ -605,11 +762,14 @@
                 status.className = 'status connected';
                 messageInput.disabled = false;
                 sendBtn.disabled = false;
+                attachBtn.disabled = false;
             } else {
                 status.textContent = 'Disconnected';
                 status.className = 'status disconnected';
                 messageInput.disabled = true;
                 sendBtn.disabled = true;
+                attachBtn.disabled = true;
+                attachMenu.classList.remove('show');
             }
         }
 
@@ -642,7 +802,7 @@
 
         function addMessage(sender, data) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message received';
+            messageDiv.className = 'message';
 
             const senderDiv = document.createElement('div');
             senderDiv.className = 'message-sender';
@@ -652,7 +812,8 @@
             contentDiv.className = 'message-content';
 
             if (data.text) {
-                contentDiv.textContent = data.text;
+                const textNode = document.createTextNode(data.text);
+                contentDiv.appendChild(textNode);
             }
 
             if (data.image) {
@@ -711,12 +872,18 @@
             if (file) {
                 if (file.size > 2 * 1024 * 1024) {
                     alert('Image must be less than 2MB');
+                    imageInput.value = '';
                     return;
                 }
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    currentAttachment = { type: 'image', data: event.target.result };
-                    showAttachmentPreview('Image', file.name);
+                    currentAttachment = {
+                        type: 'image',
+                        data: event.target.result,
+                        name: file.name,
+                        size: file.size
+                    };
+                    showAttachmentPreview('Image', file.name, file.size);
                 };
                 reader.readAsDataURL(file);
             }
@@ -727,6 +894,7 @@
             if (file) {
                 if (file.size > 2 * 1024 * 1024) {
                     alert('File must be less than 2MB');
+                    fileInput.value = '';
                     return;
                 }
                 const reader = new FileReader();
@@ -737,17 +905,22 @@
                         name: file.name,
                         size: file.size
                     };
-                    showAttachmentPreview('File', file.name);
+                    showAttachmentPreview('File', file.name, file.size);
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        function showAttachmentPreview(type, name) {
+        function showAttachmentPreview(type, name, size) {
+            const icon = type === 'Image' ? '🖼️' : '📄';
             attachmentPreview.innerHTML = `
                 <div class="attachment-preview">
-                    <span>${type}: ${name}</span>
-                    <button onclick="clearAttachment()">Remove</button>
+                    <div class="attachment-preview-icon">${icon}</div>
+                    <div class="attachment-preview-info">
+                        <div class="attachment-preview-name">${name}</div>
+                        <div class="attachment-preview-size">${formatFileSize(size)}</div>
+                    </div>
+                    <button onclick="clearAttachment()">✕</button>
                 </div>
             `;
         }
