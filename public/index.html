@@ -685,6 +685,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const room = urlParams.get('room') || 'demo';
 
+        // Initialize user count to 0 on page load
+        userCount.textContent = '0 users online';
+
         // Close attach menu when clicking outside
         document.addEventListener('click', (e) => {
             if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
