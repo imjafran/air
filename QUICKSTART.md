@@ -75,6 +75,11 @@ sudo docker run -it --rm -p 80:80 \
 
 ### 7. Start Services
 ```bash
+# Fix certbot permissions if needed
+if [ -d "certbot" ]; then
+    sudo chown -R $USER:$USER certbot
+fi
+
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 

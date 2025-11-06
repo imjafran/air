@@ -162,6 +162,11 @@ newgrp docker
 ```bash
 cd ~
 
+# Fix certbot directory permissions if it exists
+if [ -d "certbot" ]; then
+    sudo chown -R $USER:$USER certbot
+fi
+
 # Build and start services
 docker compose -f docker-compose.prod.yml up -d --build
 
@@ -286,6 +291,31 @@ newgrp docker
 # Or log out and back in
 exit
 ssh ubuntu@air.arraystory.com
+```
+
+### Certbot directory permission denied during build
+If you get "open /home/ubuntu/certbot/conf/accounts: permission denied" during `docker compose up --build`:
+
+**Option 1: Remove certbot directory temporarily**
+```bash
+# Move certbot out of the way
+mv certbot certbot.bak
+
+# Build containers
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Restore certbot
+mv certbot.bak certbot
+sudo chown -R $USER:$USER certbot
+
+# Restart containers
+docker compose -f docker-compose.prod.yml restart
+```
+
+**Option 2: Fix permissions first**
+```bash
+sudo chown -R $USER:$USER ~/certbot
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### WebSocket connection fails

@@ -45,6 +45,12 @@ ssh ubuntu@$SERVER << 'ENDSSH'
         echo "⚠️  IMPORTANT: Edit ~/.env with production passwords!"
     fi
 
+    # Fix certbot directory permissions if it exists
+    if [ -d "certbot" ]; then
+        echo "🔧 Fixing certbot permissions..."
+        sudo chown -R $USER:$USER certbot
+    fi
+
     # Build and start
     echo "🐳 Starting Docker containers..."
     docker compose -f docker-compose.prod.yml up -d --build

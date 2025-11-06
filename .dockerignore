@@ -1,0 +1,31 @@
+# Exclude certbot directory
+certbot/
+
+# Exclude MySQL data
+mysql/
+
+# Exclude environment files
+.env
+.env.*
+
+# Exclude git
+.git/
+.gitignore
+
+# Exclude documentation
+*.md
+
+# Exclude compose files
+docker-compose.yml
+docker-compose.prod.yml
+
+# Exclude deployment scripts
+deploy.sh
+
+# Exclude log files
+*.log
+
+# Exclude temporary files
+*.tmp
+*.temp
+*.bak*
