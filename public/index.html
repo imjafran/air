@@ -680,6 +680,7 @@
         let userName = '';
         let air = null;
         let currentAttachment = null;
+        let isFirstUserList = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         const room = urlParams.get('room') || 'demo';
@@ -777,7 +778,11 @@
         }
 
         function updateUserList(users) {
-            userCount.textContent = `${users.length} user${users.length !== 1 ? 's' : ''} online`;
+            console.log('Updating user list with:', users, 'Length:', users.length);
+
+            const count = users.length;
+            userCount.textContent = `${count} user${count !== 1 ? 's' : ''} online`;
+
             userList.innerHTML = '';
             users.forEach(user => {
                 const tag = document.createElement('div');
@@ -785,6 +790,16 @@
                 tag.textContent = user.name;
                 userList.appendChild(tag);
             });
+
+            // Show existing users on first connection
+            if (isFirstUserList && count > 1) {
+                const otherUsers = users.filter(u => u.name !== userName);
+                if (otherUsers.length > 0) {
+                    const names = otherUsers.map(u => u.name).join(', ');
+                    addSystemMessage(`${otherUsers.length} user${otherUsers.length !== 1 ? 's' : ''} already in room: ${names}`);
+                }
+                isFirstUserList = false;
+            }
         }
 
         function updateTypingIndicator(users) {
