@@ -751,11 +751,27 @@
             })
             .onJoin((user) => {
                 console.log('User joined:', user);
-                addSystemMessage(`${user.name} joined the chat`);
+                if (user && user.name) {
+                    addSystemMessage(`${user.name} joined the chat`);
+                }
+                // Force update user list if we have users
+                const currentUsers = air.getUsers();
+                console.log('After join, current users:', currentUsers);
+                if (currentUsers && currentUsers.length > 0) {
+                    updateUserList(currentUsers);
+                }
             })
             .onLeave((user) => {
                 console.log('User left:', user);
-                addSystemMessage(`${user.name} left the chat`);
+                if (user && user.name) {
+                    addSystemMessage(`${user.name} left the chat`);
+                }
+                // Force update user list if we have users
+                const currentUsers = air.getUsers();
+                console.log('After leave, current users:', currentUsers);
+                if (currentUsers && currentUsers.length > 0) {
+                    updateUserList(currentUsers);
+                }
             })
             .onUserList((users) => {
                 console.log('✓ onUserList event triggered');
