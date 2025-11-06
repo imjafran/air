@@ -734,7 +734,13 @@
                 addSystemMessage(`Welcome to AirStory Demo! You're now connected to room "${room}"`);
             })
             .onMessage((msg) => {
-                addMessage(msg.data);
+                console.log('Received message:', msg);
+                console.log('msg.data:', msg.data);
+                if (msg.data) {
+                    addMessage(msg.data);
+                } else {
+                    console.error('msg.data is undefined!');
+                }
             })
             .onJoin((user) => {
                 addSystemMessage(`${user.name} joined the chat`);
