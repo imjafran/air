@@ -143,20 +143,57 @@ if [ "$SETUP_SSL" = "y" ] || [ "$SETUP_SSL" = "Y" ]; then
 
     if [ -n "$SSL_EMAIL" ]; then
         echo "Obtaining SSL certificate for ${DOMAIN}..."
+        echo ""
+        echo "Checking DNS resolution..."
+        DNS_IP=$(dig +short ${DOMAIN} A | tail -n1)
+        SERVER_IP=$(curl -s ifconfig.me)
+        echo "Domain resolves to: ${DNS_IP}"
+        echo "Server IP: ${SERVER_IP}"
 
-        docker compose -f docker-compose.prod.yml run --rm certbot certonly \
-            --webroot \
-            --webroot-path=/var/www/certbot \
-            -d ${DOMAIN} \
-            --email "$SSL_EMAIL" \
-            --agree-tos \
-            --no-eff-email \
-            --non-interactive 2>&1 | grep -v "Saving debug log"
+        if [ "$DNS_IP" != "$SERVER_IP" ]; then
+            echo -e "${YELLOW}WARNING: DNS mismatch!${NC}"
+            echo "Domain ${DOMAIN} does not point to this server"
+            echo "SSL setup will likely fail"
+            echo ""
+            read -p "Continue anyway? (y/n): " CONTINUE
+            if [ "$CONTINUE" != "y" ]; then
+                echo "Skipped SSL. Run ./setup-ssl.sh later"
+                SETUP_SSL="n"
+            fi
+        fi
 
-        # Reload nginx
-        docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+        if [ "$SETUP_SSL" != "n" ]; then
+            echo ""
+            echo "Requesting certificate..."
 
-        echo -e "${GREEN}✓ SSL certificate installed${NC}"
+            # Run certbot with full output
+            if docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+                --webroot \
+                --webroot-path=/var/www/certbot \
+                -d ${DOMAIN} \
+                --email "$SSL_EMAIL" \
+                --agree-tos \
+                --no-eff-email; then
+
+                echo ""
+                echo -e "${GREEN}✓ SSL certificate obtained${NC}"
+
+                # Reload nginx
+                docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+                echo -e "${GREEN}✓ Nginx reloaded${NC}"
+            else
+                echo ""
+                echo -e "${RED}✗ SSL certificate failed${NC}"
+                echo ""
+                echo "Common issues:"
+                echo "1. DNS not pointing to this server"
+                echo "2. Ports 80/443 not open"
+                echo "3. Nginx not running"
+                echo ""
+                echo "You can try again with: ./setup-ssl.sh"
+                SETUP_SSL="n"
+            fi
+        fi
     fi
 else
     echo "Skipped SSL setup. You can run it later with: ./setup-ssl.sh"

@@ -207,14 +207,37 @@ sudo lsof -i :80
 sudo lsof -i :443
 ```
 
-### SSL Certificate Failed
+### SSL Certificate Stuck or Failed
 
-**Make sure DNS is pointing to your server:**
+**If SSL request is stuck:**
+1. Press Ctrl+C to cancel
+2. Run diagnostics:
 ```bash
-dig air.arraystory.com
+./troubleshoot-ssl.sh
 ```
 
-**Try manual SSL setup:**
+**Common issues:**
+
+1. **DNS not pointing to server**
+   ```bash
+   # Check DNS
+   dig air.arraystory.com
+   # Should match your server IP
+   ```
+
+2. **Port 80 not accessible**
+   ```bash
+   # Open in Lightsail firewall
+   # Then test: curl http://air.arraystory.com
+   ```
+
+3. **Domain not accessible from internet**
+   ```bash
+   # Test from your local machine:
+   curl http://air.arraystory.com
+   ```
+
+**After fixing issues, try SSL again:**
 ```bash
 ./setup-ssl.sh
 ```
