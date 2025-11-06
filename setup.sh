@@ -24,21 +24,19 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Get configuration
-echo -e "${YELLOW}Configuration:${NC}"
-read -p "Domain name (e.g., air.arraystory.com): " DOMAIN
+echo -e "${YELLOW}MySQL Configuration:${NC}"
 read -p "MySQL root password: " -s MYSQL_ROOT_PASSWORD
 echo ""
 read -p "MySQL air_user password: " -s MYSQL_PASSWORD
 echo ""
-read -p "API Token (leave empty to generate): " API_TOKEN
-echo ""
 
-if [ -z "$API_TOKEN" ]; then
-    API_TOKEN=$(openssl rand -hex 32)
-    echo -e "${GREEN}Generated API Token: ${API_TOKEN}${NC}"
-fi
+# Auto-detect domain from hostname or use default
+DOMAIN=$(hostname -f 2>/dev/null || echo "air.arraystory.com")
+echo -e "${GREEN}Using domain: ${DOMAIN}${NC}"
 
-read -p "Your email for SSL certificate: " EMAIL
+# Auto-generate API token
+API_TOKEN=$(openssl rand -hex 32)
+echo -e "${GREEN}Generated API Token: ${API_TOKEN}${NC}"
 echo ""
 
 echo -e "${YELLOW}Installing dependencies...${NC}"
@@ -60,11 +58,13 @@ fi
 echo "Installing MySQL..."
 if ! command -v mysql &> /dev/null; then
     export DEBIAN_FRONTEND=noninteractive
-    sudo debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD"
-    sudo debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD"
     sudo apt install -y mysql-server
     sudo systemctl start mysql
     sudo systemctl enable mysql
+
+    # Set root password after installation
+    sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';"
+    sudo mysql -e "FLUSH PRIVILEGES;"
 else
     echo "MySQL already installed"
 fi
@@ -91,16 +91,8 @@ echo ""
 # Set up database
 echo -e "${YELLOW}Setting up database...${NC}"
 
-# Create .my.cnf for automated mysql commands
-cat > ~/.my.cnf << EOF
-[client]
-user=root
-password=$MYSQL_ROOT_PASSWORD
-EOF
-chmod 600 ~/.my.cnf
-
 # Create database and user
-mysql -u root << MYSQL_SCRIPT
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" << MYSQL_SCRIPT
 CREATE DATABASE IF NOT EXISTS air_production;
 CREATE USER IF NOT EXISTS 'air_user'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
 GRANT ALL PRIVILEGES ON air_production.* TO 'air_user'@'localhost';
@@ -109,17 +101,14 @@ MYSQL_SCRIPT
 
 # Load schema
 echo "Loading database schema..."
-mysql -u root air_production < schema.sql
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" air_production < schema.sql
 
 # Insert initial data
-mysql -u root air_production << MYSQL_SCRIPT
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" air_production << MYSQL_SCRIPT
 INSERT INTO air_rooms (name, description, is_active) VALUES ('demo', 'Production demo room', TRUE) ON DUPLICATE KEY UPDATE name=name;
 INSERT INTO air_room_domains (room_id, domain) VALUES (1, '$DOMAIN') ON DUPLICATE KEY UPDATE domain='$DOMAIN';
 INSERT INTO air_api_tokens (token, room_id, name, is_active) VALUES ('$API_TOKEN', 1, 'Production API Token', TRUE) ON DUPLICATE KEY UPDATE token='$API_TOKEN';
 MYSQL_SCRIPT
-
-# Clean up .my.cnf
-rm ~/.my.cnf
 
 echo -e "${GREEN}✓ Database configured${NC}"
 echo ""
@@ -235,18 +224,11 @@ sudo systemctl reload nginx
 echo -e "${GREEN}✓ Nginx configured${NC}"
 echo ""
 
-# SSL Certificate
-echo -e "${YELLOW}Setting up SSL certificate...${NC}"
-echo "This will obtain an SSL certificate from Let's Encrypt"
-read -p "Continue with SSL setup? (y/n): " -n 1 -r
+# SSL Certificate (optional)
 echo ""
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
-    echo -e "${GREEN}✓ SSL certificate installed${NC}"
-else
-    echo -e "${YELLOW}Skipping SSL setup. Run later with: sudo certbot --nginx -d $DOMAIN${NC}"
-fi
+echo -e "${YELLOW}SSL Certificate Setup:${NC}"
+echo "To set up SSL later, run: sudo certbot --nginx -d $DOMAIN"
+echo -e "${YELLOW}Skipping SSL for now${NC}"
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
@@ -255,17 +237,23 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "Service Status: ${GREEN}$(sudo systemctl is-active air)${NC}"
 echo ""
-echo -e "${YELLOW}Important Information:${NC}"
+echo -e "${YELLOW}Important Information (Save this!):${NC}"
+echo ""
 echo "Domain: $DOMAIN"
 echo "API Token: $API_TOKEN"
+echo "Room: demo"
 echo "MySQL User: air_user"
 echo "MySQL Password: $MYSQL_PASSWORD"
 echo ""
-echo -e "${YELLOW}Useful Commands:${NC}"
-echo "Check service status: sudo systemctl status air"
-echo "View logs: sudo journalctl -u air -f"
-echo "Restart service: sudo systemctl restart air"
-echo "Test site: curl http://$DOMAIN"
+echo -e "${YELLOW}Next Steps:${NC}"
+echo "1. Set up SSL: sudo certbot --nginx -d $DOMAIN --email your-email@example.com"
+echo "2. Point DNS A record for $DOMAIN to this server's IP"
 echo ""
-echo -e "${GREEN}Visit: https://$DOMAIN${NC}"
+echo -e "${YELLOW}Useful Commands:${NC}"
+echo "Check service: sudo systemctl status air"
+echo "View logs: sudo journalctl -u air -f"
+echo "Restart: sudo systemctl restart air"
+echo "Update: cd ~/air && ./update.sh"
+echo ""
+echo -e "${GREEN}Visit: http://$DOMAIN (or https:// after SSL setup)${NC}"
 echo ""
