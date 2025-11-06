@@ -12,9 +12,6 @@ mysql/
 air
 main
 
-# Go modules
-go.sum
-
 # IDE
 .vscode/
 .idea/

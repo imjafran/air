@@ -92,29 +92,21 @@ newgrp docker
 
 ## Step 5: Deploy Application
 
-1. **Upload files to server**
-
-   From your local machine:
-   ```bash
-   # Navigate to project directory
-   cd /Users/jafran/Workstation/R\&D/GO/realtime
-
-   # Upload files using scp
-   scp -r * ubuntu@air.arraystory.com:~/
-   ```
-
-   Or use Git:
+1. **Clone repository on server**
    ```bash
    # On server
    cd ~
    git clone [your-repo-url] .
+
+   # Or if already cloned, pull latest changes
+   git pull
    ```
 
 2. **Set up production environment**
    ```bash
    cd ~
 
-   # Copy production env file
+   # Copy production env file (only needed first time)
    cp .env.production .env
 
    # Edit with strong passwords
@@ -257,11 +249,14 @@ docker compose -f docker-compose.prod.yml restart
 ```bash
 cd ~
 
-# Pull latest changes (if using Git)
+# Pull latest changes from Git
 git pull
 
-# Rebuild and restart
+# Rebuild and restart containers
 docker compose -f docker-compose.prod.yml up -d --build
+
+# Or just restart without rebuild if only code changed
+docker compose -f docker-compose.prod.yml restart go-app
 ```
 
 ### Check SSL Certificate Renewal

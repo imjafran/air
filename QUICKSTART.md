@@ -38,23 +38,13 @@ sudo chmod +x /usr/local/bin/docker-compose
 newgrp docker
 ```
 
-### 4. Upload Files
-
-From your local machine:
-```bash
-cd /Users/jafran/Workstation/R\&D/GO/realtime
-./deploy.sh air.arraystory.com
-```
-
-Or manually:
-```bash
-scp -r * ubuntu@air.arraystory.com:~/
-```
-
-### 5. Set Up Environment
+### 4. Clone Repository and Set Up
 ```bash
 ssh ubuntu@air.arraystory.com
 cd ~
+git clone [your-repo-url] .
+
+# Set up environment file
 cp .env.production .env
 nano .env  # Change passwords!
 ```
@@ -67,7 +57,7 @@ sudo docker run -it --rm -p 80:80 \
   -v "$(pwd)/certbot/conf:/etc/letsencrypt" \
   -v "$(pwd)/certbot/www:/var/www/certbot" \
   certbot/certbot certonly --standalone \
-  --email YOUR_EMAIL@example.com \
+  --email jafraaan@gmail.com \
   --agree-tos \
   --no-eff-email \
   -d air.arraystory.com
@@ -104,6 +94,16 @@ EXIT;
 
 ### 9. Test
 Visit: **https://air.arraystory.com/**
+
+## Updating Your Deployment
+
+After pushing changes to Git:
+```bash
+ssh ubuntu@air.arraystory.com
+cd ~
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
 ## Files Created
 
