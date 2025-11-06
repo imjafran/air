@@ -1,0 +1,29 @@
+# Air Project (ArrayStory Air)
+
+# Environment variables
+.env
+.env.local
+
+# Docker volumes
+wordpress/
+mysql/
+
+# Go binary
+air
+main
+
+# Go modules
+go.sum
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

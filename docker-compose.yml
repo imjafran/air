@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: air_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - air-network
+
+  go-app:
+    build: .
+    container_name: air_go
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      AIR_PORT: 8181
+    ports:
+      - "8282:8181"
+    networks:
+      - air-network
+    volumes:
+      - ./public:/app/public
+
+  adminer:
+    image: adminer:latest
+    container_name: air_adminer
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8283:8080"
+    networks:
+      - air-network
+
+networks:
+  air-network:
+    driver: bridge
+
+volumes:
+  mysql:

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Chat - Public Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .name-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .name-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .name-container h1 {
+            font-size: 2rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .name-container p {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .name-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .name-container input {
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .name-container input:focus {
+            border-color: #667eea;
+        }
+
+        .name-container button {
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .name-container button:hover {
+            background: #5a67d8;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 600px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .header {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .header-left small {
+            color: #cbd5e0;
+            font-size: 0.875rem;
+        }
+
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status.connected {
+            background: #48bb78;
+        }
+
+        .status.connected::before {
+            background: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status.disconnected {
+            background: #f56565;
+        }
+
+        .status.disconnected::before {
+            background: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f7fafc;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            text-align: right;
+        }
+
+        .message.received {
+            text-align: left;
+        }
+
+        .message-sender {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .message.sent .message-sender {
+            color: #5a67d8;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.sent .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.received .message-content {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .message.system {
+            text-align: center;
+        }
+
+        .message.system .message-content {
+            background: transparent;
+            color: #718096;
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: 5px 10px;
+        }
+
+        .message.system .message-sender {
+            display: none;
+        }
+
+        .message.system .message-time {
+            color: #a0aec0;
+            font-size: 0.7rem;
+            margin-top: 4px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-form input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-form input:focus {
+            border-color: #667eea;
+        }
+
+        .input-form button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .input-form button:hover {
+            background: #5a67d8;
+        }
+
+        .input-form button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .connection-info {
+            padding: 10px 20px;
+            background: #edf2f7;
+            font-size: 0.875rem;
+            color: #4a5568;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="name-screen" id="nameScreen">
+        <div class="name-container">
+            <h1>Air Chat</h1>
+            <p>Join the public demo chat</p>
+            <form id="nameForm">
+                <input type="text" id="nameInput" placeholder="Enter your name..." autocomplete="off" maxlength="20" required>
+                <button type="submit">Join Chat</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="chatContainer">
+        <div class="header">
+            <div class="header-left">
+                <h1>Air Chat</h1>
+                <small id="userLabel"></small>
+            </div>
+            <div class="status disconnected" id="status">Disconnected</div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <form class="input-form" id="messageForm">
+                <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" disabled>
+                <button type="submit" id="sendBtn" disabled>Send</button>
+            </form>
+        </div>
+        <div class="connection-info" id="connectionInfo">Connecting...</div>
+    </div>
+
+    <script src="air.js"></script>
+    <script>
+        const nameScreen = document.getElementById('nameScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        const nameForm = document.getElementById('nameForm');
+        const nameInput = document.getElementById('nameInput');
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const connectionInfo = document.getElementById('connectionInfo');
+        const userLabel = document.getElementById('userLabel');
+
+        let userName = '';
+        let air = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const room = urlParams.get('room') || 'demo';
+
+        const storedName = localStorage.getItem('name');
+        if (storedName) {
+            userName = storedName;
+            enterChat();
+        } else {
+            nameInput.focus();
+        }
+
+        nameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (name) {
+                userName = name;
+                localStorage.setItem('name', userName);
+                enterChat();
+            }
+        });
+
+        function enterChat() {
+            nameScreen.style.display = 'none';
+            chatContainer.style.display = 'block';
+            userLabel.textContent = `Logged in as ${userName}`;
+
+            air = new Air(room);
+
+            air.onConnect(() => {
+                   updateStatus(true);
+                   // Notify others that user joined
+                   air.send({ name: userName, message: 'joined the room', type: 'system' });
+               })
+               .onMessage((data) => {
+                   if (data.type === 'system') {
+                       addSystemMessage(`${data.name} ${data.message}`);
+                   } else {
+                       addMessage(data.name, data.message, 'received');
+                   }
+               })
+               .onSent((data) => {
+                   if (data.type !== 'system') {
+                       addMessage(userName, data.message, 'sent');
+                   }
+                   messageInput.value = '';
+                   messageInput.focus();
+               })
+               .onError(() => {
+                   connectionInfo.textContent = 'Connection error';
+                   connectionInfo.style.color = '#f56565';
+               })
+               .onDisconnect(() => updateStatus(false));
+
+            air.connect();
+
+            // Notify when user leaves
+            window.addEventListener('beforeunload', () => {
+                if (air && air.isConnected()) {
+                    air.send({ name: userName, message: 'left the room', type: 'system' });
+                }
+            });
+        }
+
+        function formatTime() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addMessage(sender, text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const senderDiv = document.createElement('div');
+            senderDiv.className = 'message-sender';
+            senderDiv.textContent = sender;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = formatTime();
+
+            messageDiv.appendChild(senderDiv);
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timeDiv);
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = formatTime();
+
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timeDiv);
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'status connected';
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                connectionInfo.textContent = `Connected to room: ${room}`;
+                connectionInfo.style.color = '#48bb78';
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'status disconnected';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                connectionInfo.textContent = 'Reconnecting...';
+                connectionInfo.style.color = '#f56565';
+            }
+        }
+
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message && air && air.isConnected()) {
+                air.send({ name: userName, message: message });
+            }
+        });
+    </script>
+</body>
+</html>
